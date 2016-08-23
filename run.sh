@@ -1,0 +1,1 @@
+screen -d -m python3.4 main.py > /dev/null

@@ -13,6 +13,8 @@ def save():
 
 
 if __name__ == "__main__":
+	i=0
+	state=0
 	chdir("/home/pi/GPS/")
 	loggedData =None
 	try:
@@ -20,11 +22,11 @@ if __name__ == "__main__":
 			loggedData = pickle.load(f)
 	except FileNotFoundError:
 		loggedData=dict()
-	#print(loggedData)
 	GPIO.setmode(GPIO.BCM)
 	GPIO.setup(4,GPIO.IN) 
 	GPIO.setup(19,GPIO.OUT)
 	GPIO.setup(13,GPIO.OUT)
+	GPIO.setup(6,GPIO.OUT)
 	GPIO.output(19,1)
 	try:
 		gpsd.connect()
@@ -35,9 +37,7 @@ if __name__ == "__main__":
 		sleep(10)
 		gpsd.connect()
 	while True:
-		i=0
 		try:
-			#system("clear")
 			if GPIO.input(4)==GPIO.LOW:
 				GPIO.output(13,1)
 				try:
@@ -48,11 +48,9 @@ if __name__ == "__main__":
 					cells = iwlist.parse(content)
 				except gpsd.NoFixError:
 					pass
-					#print("no fix")
 				except IndexError:
 					pass
 				except KeyboardInterrupt:
-					#print(loggedData)
 					save()
 					GPIO.cleanup()
 					exit(0)
@@ -69,17 +67,22 @@ if __name__ == "__main__":
 							loggedData[element["mac"]]["position"]=(x,y)
 						except KeyError:
 							loggedData[element["mac"]]=element
-							print(element)
-					print("-----------------------------------------------------------------------")
-					if i<=15:
+					if i>=15:
 						save()
+						if state==0:
+							GPIO.output(6,1)
+							state=1
+						else:
+							GPIO.output(6,0)
+							state=0
+						i=0
+
 					else:
 						i+=1
 			else:
 				GPIO.output(13,0)
-				#print("no Fix")
 		except KeyboardInterrupt:
-			#print(loggedData)
+			print(loggedData)
 			save()
 			GPIO.cleanup()
 			exit(0)

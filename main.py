@@ -6,9 +6,12 @@ from os import system
 import iwlist
 import pickle
 from os import chdir
+
 def save():
 	with open("logFile" + '.pkl', 'wb') as f:
 		pickle.dump(loggedData, f, pickle.HIGHEST_PROTOCOL)
+
+
 if __name__ == "__main__":
 	chdir("/home/pi/GPS/")
 	loggedData =None
@@ -17,7 +20,7 @@ if __name__ == "__main__":
 			loggedData = pickle.load(f)
 	except FileNotFoundError:
 		loggedData=dict()
-	print(loggedData)
+	#print(loggedData)
 	GPIO.setmode(GPIO.BCM)
 	GPIO.setup(4,GPIO.IN) 
 	GPIO.setup(19,GPIO.OUT)
@@ -43,40 +46,41 @@ if __name__ == "__main__":
 					percision = packet.position_precision()
 					content = iwlist.scan(interface='wlan1')
 					cells = iwlist.parse(content)
+				except gpsd.NoFixError:
+					pass
+					#print("no fix")
+				except IndexError:
+					pass
+				except KeyboardInterrupt:
+					#print(loggedData)
+					save()
+					GPIO.cleanup()
+					exit(0)
+				except KeyError:
+					pass
+				else:
 					for element in cells:
 						element["position"] = position
 						element["percision"] = percision
 						del element["cellnumber"]
-						print("_____________________________________________________________")
 						try:
 							x=((loggedData[element["mac"]]["position"][0])+element["position"][0])/2
 							y=((loggedData[element["mac"]]["position"][1])+element["position"][1])/2
-							loggedData[element["mac"]]["position"][0]=x
-							loggedData[element["mac"]]["position"][1]=y
-							print("no new Wifi")
+							loggedData[element["mac"]]["position"]=(x,y)
 						except KeyError:
 							loggedData[element["mac"]]=element
 							print(element)
+					print("-----------------------------------------------------------------------")
 					if i<=15:
 						save()
 					else:
 						i+=1
-
-				except gpsd.NoFixError:
-					print("no fix")
-				except IndexError:
-					pass
-				except KeyboardInterrupt:
-					print(loggedData)
-					save()
-
-					exit(0)
-				except :
-					pass
 			else:
 				GPIO.output(13,0)
-				print("no Fix")
+				#print("no Fix")
 		except KeyboardInterrupt:
-			print(loggedData)
+			#print(loggedData)
 			save()
+			GPIO.cleanup()
 			exit(0)
+			

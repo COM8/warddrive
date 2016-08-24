@@ -44,11 +44,24 @@ if __name__ == "__main__":
 					packet = gpsd.get_current()
 					position = packet.position()
 					percision = packet.position_precision()
-					content = iwlist.scan(interface='wlan1')
-					cells = iwlist.parse(content)
+					for interface in range(0,2):
+						content = iwlist.scan(interface='wlan'+str(interface))
+						if len(content)>0:
+							for element in iwlist.parse(content):
+								element["position"] = position
+								element["percision"] = percision
+								del element["cellnumber"]
+								try:
+									x=((loggedData[element["mac"]]["position"][0])+element["position"][0])/2
+									y=((loggedData[element["mac"]]["position"][1])+element["position"][1])/2
+									loggedData[element["mac"]]["position"]=(x,y)
+								except KeyError:
+									loggedData[element["mac"]]=element
+						else:
+							break
 				except gpsd.NoFixError:
 					pass
-				except IndexError:
+				except FileNotFoundError:
 					pass
 				except KeyboardInterrupt:
 					save()
@@ -57,16 +70,6 @@ if __name__ == "__main__":
 				except KeyError:
 					pass
 				else:
-					for element in cells:
-						element["position"] = position
-						element["percision"] = percision
-						del element["cellnumber"]
-						try:
-							x=((loggedData[element["mac"]]["position"][0])+element["position"][0])/2
-							y=((loggedData[element["mac"]]["position"][1])+element["position"][1])/2
-							loggedData[element["mac"]]["position"]=(x,y)
-						except KeyError:
-							loggedData[element["mac"]]=element
 					if i>=15:
 						save()
 						if state==0:

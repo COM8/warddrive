@@ -6,6 +6,7 @@ from os import system
 import iwlist
 import pickle
 from os import chdir
+from datetime import datetime
 
 def save():
 	with open("logFile" + '.pkl', 'wb') as f:
@@ -41,10 +42,12 @@ if __name__ == "__main__":
 			if GPIO.input(4)==GPIO.LOW:
 				GPIO.output(13,1)
 				try:
+					startTime=datetime.now()
 					packet = gpsd.get_current()
 					position = packet.position()
 					percision = packet.position_precision()
 					for interface in range(0,2):
+						print(interface)
 						content = iwlist.scan(interface='wlan'+str(interface))
 						if len(content)>0:
 							for element in iwlist.parse(content):
@@ -61,7 +64,7 @@ if __name__ == "__main__":
 							break
 				except gpsd.NoFixError:
 					pass
-				except FileNotFoundError:
+				except IndexError:
 					pass
 				except KeyboardInterrupt:
 					save()
@@ -70,7 +73,7 @@ if __name__ == "__main__":
 				except KeyError:
 					pass
 				else:
-					if i>=15:
+					if i>=5:
 						save()
 						if state==0:
 							GPIO.output(6,1)
@@ -82,6 +85,7 @@ if __name__ == "__main__":
 
 					else:
 						i+=1
+					print((datetime.now()-startTime).total_seconds())
 			else:
 				GPIO.output(13,0)
 		except KeyboardInterrupt:

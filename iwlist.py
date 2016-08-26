@@ -15,7 +15,7 @@ regexps = [
 # Runs the comnmand to scan the list of networks.
 # Must run as super user.
 # Does not specify a particular device, so will scan all network devices.
-def scan(interface='wlan0'):
+def scan(interface='wlan1'):
     cmd = ["iwlist", interface, "scan"]
     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     points = proc.stdout.read().decode('utf-8')

@@ -4,19 +4,24 @@ import RPi.GPIO as GPIO
 import iwlist
 import pickle
 from os import chdir
+from time import sleep
 
 def stop(channel):
 	save()
-	print("Event detected")
 	GPIO.cleanup()
-	exit(0)
+	#exit(0)
+	while GPIO.input==0:
+		sleep(0.5)
+	while GPIO.input==1:
+		sleep(0.5)
+	main()
 
 def save():
 	with open("logFile" + '.pkl', 'wb') as f:
 		pickle.dump(loggedData, f, pickle.HIGHEST_PROTOCOL)
 
-
-if __name__ == "__main__":
+def main():
+	global loggedData
 	i=0
 	state=0
 	chdir("/home/pi/GPS/")
@@ -33,7 +38,7 @@ if __name__ == "__main__":
 	GPIO.setup(6,GPIO.OUT)
 	GPIO.setup(23, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 	GPIO.output(19,1)
-	GPIO.add_event_detect(23, GPIO.FALLING, callback=stop, bouncetime=200)
+	#GPIO.add_event_detect(23, GPIO.FALLING, callback=stop, bouncetime=200)
 	try:
 		gpsd.connect()
 	except ConnectionRefusedError:
@@ -46,6 +51,8 @@ if __name__ == "__main__":
 		gpsd.connect()		
 	while True:
 		try:
+			if GPIO.input(23)==0:
+				stop(channel=None)
 			if GPIO.input(4)==GPIO.LOW:
 				GPIO.output(13,1)
 				try:
@@ -104,4 +111,8 @@ if __name__ == "__main__":
 		except KeyboardInterrupt:
 			print(loggedData)
 			stop(23)
+
+if __name__ == "__main__":
+	main()
+
 				

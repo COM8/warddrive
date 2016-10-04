@@ -6,13 +6,15 @@ if __name__=="__main__":
 			loggedData = pickle.load(f)
 		if len(sys.argv)>=2:
 			Thelist=sys.argv
-			Thelist.remove("filter.py")			
+			Thelist.pop(0)
 			for key, value in loggedData.items():
-				for output in Thelist:
-					try:							
-						print(value["essid"]+": "+str(value["position"])+"; Encrytion: "+str(value["encryption"]))
+				output=""
+				for option in Thelist:
+					try:
+						output= output + ", " + (str(option)+": "+str(value[option]))
 					except KeyError:
-						print("unnamed : "+str(value["position"])+"; Encrytion: "+str(value["encryption"]))
+						Thelist.remove(output)
+				print(output)
 			exit(0)
 			
 		else:

@@ -1,7 +1,7 @@
 #!/usr/bin/python3.4
 import gpsd
 import RPi.GPIO as GPIO
-import iwlist
+import listwifi as iwlist
 import pickle
 from os import chdir
 from time import sleep

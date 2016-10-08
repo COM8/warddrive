@@ -1,7 +1,8 @@
 #!/usr/bin/python3.4
 
 import gpsd
-import iwlist
+import RPi.GPIO as GPIO
+import listwifi as iwlist
 import pickle
 import RPi.GPIO as GPIO
 from os import chdir

@@ -2,7 +2,7 @@
 
 import gpsd
 import RPi.GPIO as GPIO
-import listwifi as iwlist
+import iwlist
 import pickle
 import RPi.GPIO as GPIO
 from os import chdir

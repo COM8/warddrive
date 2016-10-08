@@ -1,11 +1,12 @@
 #!/usr/bin/python3.4
+
 import gpsd
 import RPi.GPIO as GPIO
 import listwifi as iwlist
 import pickle
+import RPi.GPIO as GPIO
 from os import chdir
 from time import sleep
-
 
 def stop(channel):
     save()
@@ -18,24 +19,12 @@ def stop(channel):
     exit(0)
     main()
 
-
 def save():
     with open("logFile" + '.pkl', 'wb') as f:
         pickle.dump(loggedData, f, pickle.HIGHEST_PROTOCOL)
-
-
-def main():
-    global loggedData
-    i = 0
-    state = 0
-    chdir("/home/pi/GPS/")
-    loggedData = None
-    try:
-        with open("logFile" + '.pkl', 'rb') as f:
-            loggedData = pickle.load(f)
-    except FileNotFoundError:
-        loggedData = dict()
-    GPIO.setmode(GPIO.BCM)
+		
+def setupGPIO():
+	GPIO.setmode(GPIO.BCM)
     GPIO.setup(4, GPIO.IN)
     GPIO.setup(19, GPIO.OUT)
     GPIO.setup(13, GPIO.OUT)
@@ -43,6 +32,22 @@ def main():
     GPIO.setup(23, GPIO.IN, pull_up_down=GPIO.PUD_UP)
     GPIO.output(19, 1)
     #GPIO.add_event_detect(23, GPIO.FALLING, callback=stop, bouncetime=200)
+
+def main():
+    global loggedData
+    i = 0
+    state = 0
+    loggedData = None
+	
+	chdir("/home/pi/GPS/")
+    try:
+        with open("logFile" + '.pkl', 'rb') as f:
+            loggedData = pickle.load(f)
+    except FileNotFoundError:
+        loggedData = dict()
+    
+	setupGPIO()
+	
     try:
         gpsd.connect()
     except ConnectionRefusedError:
@@ -53,6 +58,7 @@ def main():
         system("sudo gpsd /dev/ttyS0 -F /var/run/gpsd.sock")
         sleep(10)
         gpsd.connect()
+		
     while True:
         try:
             if GPIO.input(23) == 0:
@@ -109,7 +115,6 @@ def main():
                     if i >= 5:
                         save()
                         i = 0
-
                     else:
                         i += 1
                     if state == 0:

@@ -96,6 +96,8 @@ def parse(scanresult):
 						signallevel+=char
 				wifi["signallevel"]=signallevel
 				wifi["quality"]=quality
+	return Theresult
+	
 def scan(interface='wlan0'):
     cmd = ["iwlist", interface, "scan"]
     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)

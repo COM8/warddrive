@@ -33,6 +33,17 @@ def setupGPIO():
     GPIO.output(19, 1)
     #GPIO.add_event_detect(23, GPIO.FALLING, callback=stop, bouncetime=200)
 
+def findOptimalInterface():
+    best=0
+    bestid=0
+    for interface in range(0, 10):
+        content = iwlist.scan(
+            interface='wlan' + str(interface))
+        result=iwlist.parse(content)
+        if len(result)>best:
+            bestid=interface
+            best=len(result)
+    return(bestid)
 def main():
     global loggedData
     i = 0

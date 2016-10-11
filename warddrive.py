@@ -33,6 +33,18 @@ def setupGPIO():
     GPIO.output(19, 1)
     #GPIO.add_event_detect(23, GPIO.FALLING, callback=stop, bouncetime=200)
 
+def findOptimalInterface():
+    best=0
+    bestid=0
+    for interface in range(0, 10):
+        content = iwlist.scan(
+            interface='wlan' + str(interface))
+        result=iwlist.parse(content)
+        if len(result)>best:
+            bestid=interface
+            best=len(result)
+    return(bestid)
+
 def main():
     global loggedData
     i = 0
@@ -58,7 +70,7 @@ def main():
         system("sudo gpsd /dev/ttyS0 -F /var/run/gpsd.sock")
         sleep(10)
         gpsd.connect()
-		
+	interface='wlan' + str(findOptimalInterface())
     while True:
         try:
             if GPIO.input(23) == 0:
@@ -69,9 +81,7 @@ def main():
                     packet = gpsd.get_current()
                     position = packet.position()
                     percision = packet.position_precision()
-                    for interface in range(1, 2):
-                        content = iwlist.scan(
-                            interface='wlan' + str(interface))
+                    content = iwlist.scan(interface='wlan' + str(interface))
                         if len(content) > 0:
                             for element in iwlist.parse(content):
                                 element["position"] = position

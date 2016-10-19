@@ -1,112 +1,39 @@
+import re
 import subprocess
 
-def parse(scanresult):
-	iwlistinput=scanresult.split('\n')
-	Theresult = list()
-	first=True
-	wifi=dict()
-	for line in iwlistinput:
-		worker=line.lstrip()
-		if "Address" in worker:
-			if not first:
-				Theresult.append(wifi)
-				wifi=dict()
-			worker=worker.lstrip("Cell ")
-			phase=0
-			mac=""
-			for char in worker:
-				if phase==0 and char ==":":
-					phase+=1
-				elif phase==1:
-					phase+=1
-				elif phase==2:
-					mac+=char
-			wifi["mac"]=mac
-			first=False
-		elif "ESSID" in worker:
-			phase=0
-			essid=""
-			for char in worker:
-				if phase==0 and char == '"':
-					phase=1
-				elif phase==1:
-					if char !='"':
-						essid+=char
-					else:
-						break
-			wifi["ESSID"]=essid
-		elif "Frequency" in worker:
-			phase=0
-			frequency=""
-			channel=""
-			for char in worker:
-				if char==":" and phase==0:
-					phase+=1
-				elif phase==1:
-					if char!="z":
-						frequency+=char
-					else:
-						frequency+="z"
-						phase+=1
-				elif phase==2 and char=="l":
-					phase+=1
-				elif phase==3:
-					phase+=1
-				elif phase==4 and char !=")":
-					channel+=char
-			wifi["channel"]=int(channel)
-			wifi["frequency"]=frequency
-		elif "Encryption" in worker:
-			out=""
-			phase=0
-			for char in worker:
-				if phase==0 and char==":":
-					phase+=1
-				elif phase==1:
-					out+=char
-			if out == "on":
-				wifi["Encryption"]=True
-			else:
-				wifi["Encryption"]=False
-		elif "Bit Rates" in worker:
-			phase=0
-			rates=""
-			for char in worker:
-				if phase==0 and char==":":
-					phase+=1
-				elif phase==1:
-					rates+=char
-			wifi["Bit Rates"]=rates
-		elif "Quality" in worker:
-			phase=0
-			quality=""
-			signallevel=""
-			for char in worker:
-				if phase==0 and char=="=":
-					phase+=1
-				elif phase==1:
-					if char != " ":
-						quality+=char
-					else:
-						phase+=1
-				elif phase==2 and char =="=":
-					phase+=1
-				elif phase==3:
-					if char!=" ":
-						signallevel+=char
-				wifi["signallevel"]=signallevel
-				wifi["quality"]=quality
-	return Theresult
-	
+cellNumberRe = re.compile(r"^Cell\s+(?P<cellnumber>.+)\s+-\s+Address:\s(?P<mac>.+)$")
+regexps = [
+    re.compile(r"^ESSID:\"(?P<essid>.+)\"$"),
+    re.compile(r"^Protocol:(?P<protocol>.+)$"),
+    re.compile(r"^Mode:(?P<mode>.+)$"),
+    re.compile(r"^Frequency:(?P<frequency>[\d.]+) (?P<frequency_units>.+) \(Channel (?P<channel>\d+)\)$"),
+    re.compile(r"^Encryption key:(?P<encryption>.+)$"),
+    re.compile(r"^Quality=(?P<signal_level>\d+)/(?P<signal_total>\d+)\s+Signal level=(?P<db>.+) d.+$"),
+    re.compile(r"^Signal level=(?P<signal_level>\d+)/(?P<signal_total>\d+).*$"),
+]
+
+# Runs the comnmand to scan the list of networks.
+# Must run as super user.
+# Does not specify a particular device, so will scan all network devices.
 def scan(interface='wlan0'):
     cmd = ["iwlist", interface, "scan"]
     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     points = proc.stdout.read().decode('utf-8')
     return points
 
-if __name__=="__main__":
-	query=""
-	with open("file.txt") as f:
-		query = f.read()
-	parse(query)
-	#parse(scan(interface='wlp7s0'))
+# Parses the response from the command "iwlist scan"
+def parse(content):
+    cells = []
+    lines = content.split('\n')
+    for line in lines:
+        line = line.strip()
+        cellNumber = cellNumberRe.search(line)
+        if cellNumber is not None:
+            cells.append(cellNumber.groupdict())
+            continue
+        for expression in regexps:
+            result = expression.search(line)
+            if result is not None:
+                cells[-1].update(result.groupdict())
+                continue
+    return cells

@@ -20,6 +20,8 @@ local.properties
 *.kml
 *.pkl
 *.sublime-workspace
+*.old.*
+*.sh
 
 # External tool builders
 .externalToolBuilders/

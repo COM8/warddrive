@@ -2,9 +2,12 @@ import pickle
 
 def check(string):
 	newstring=""
-	for char in string:
-		if char!="&":
-			newstring=str(newstring)+str(char)
+	try:
+		for char in string:
+			if char!="&":
+				newstring=str(newstring)+str(char)
+	except TypeError:
+		return str(string)
 	return(str(newstring))
 
 if __name__=="__main__":
@@ -15,7 +18,7 @@ if __name__=="__main__":
 	for key, value in loggedData.items():
 		name=None
 		try:
-			name=value["essid"]
+			name=value["ESSID"]
 		except KeyError:
 			name="unknown"
 		file.write('<Placemark>\n<name>'+check(name)+'</name>\n<description>\n')

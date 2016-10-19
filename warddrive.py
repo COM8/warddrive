@@ -79,12 +79,11 @@ def main():
                     packet = gpsd.get_current()
                     position = packet.position()
                     percision = packet.position_precision()
-                    content = iwlist.scan(interface='wlan' + str(interface))
+                    content = iwlist.scan(interface=interface)
                     if len(content) > 0:
                         for element in iwlist.parse(content):
                             element["position"] = position
                             element["percision"] = percision
-                            del element["cellnumber"]
                             try:
                                 dif1 = (percision[0] + percision[1])
                                 dif2 = loggedData[element["mac"]]["percision"][
@@ -110,7 +109,7 @@ def main():
                                 print(element)
                                 loggedData[element["mac"]] = element
                         else:
-                            break
+                            pass
                 except gpsd.NoFixError:
                     pass
                 except IndexError:

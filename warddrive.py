@@ -129,17 +129,22 @@ def main():
 						stop(channel=None)
 				except OSError as e:
 					print(e)
+					GPIO.output(13, 0)
 					from time import sleep
 					from os import system
 					print("Service not running... starting it")
 					system("sudo killall gpsd")
 					system("sudo gpsd /dev/ttyS0 -F /var/run/gpsd.sock")
 					sleep(10)
+					gps_socket = gps3.GPSDSocket()
+					data_stream = gps3.DataStream()
+					gps_socket.connect()
+					gps_socket.watch()
 			else:
 				GPIO.output(13, 0)
 		except KeyboardInterrupt:
-			print(loggedData)
 			stop(23)
 
 if __name__ == "__main__":
 	main()
+	stop(23)

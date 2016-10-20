@@ -55,7 +55,7 @@ def main():
 	try:
 		with open("logFile" + '.pkl', 'rb') as f:
 			loggedData = pickle.load(f)
-	except FileNotFoundError:
+	except (FileNotFoundError, EOFError):
 		loggedData = dict()
 	setupGPIO()	
 	gps_socket = gps3.GPSDSocket()
@@ -70,8 +70,8 @@ def main():
 				stop(channel=None)
 			if GPIO.input(4) == GPIO.LOW:
 				GPIO.output(13, 1)
-				for new_data in gps_socket:
-					try:
+				try:
+					for new_data in gps_socket:
 						if new_data:	
 							data_stream.unpack(new_data)
 							if data_stream.TPV['mode'] >=2:
@@ -105,35 +105,36 @@ def main():
 																							   "percision"][0]) / 2, (percision[1] + loggedData[element["mac"]]["percision"][1]) / 2)
 										except KeyError:
 											loggedData[element["mac"]] = element
-								else:
-									break
-					except OSError:
-						from time import sleep
-						from os import system
-						print("Service not running... starting it")
-						system("sudo killall gpsd")
-						system("sudo gpsd /dev/ttyS0 -F /var/run/gpsd.sock")
-						sleep(10)
-					except IndexError:
-						pass
-					except KeyboardInterrupt:
-						stop(23)
-					except (KeyError,AttributeError,TypeError)as e:
-						pass
-					else:
-						if i >= 5:
-							save()
-							i = 0
-						else:
-							i += 1
-						if state == 0:
-							GPIO.output(6, 1)
-							state = 1
-						else:
-							GPIO.output(6, 0)
-							state = 0
+									if i >= 5:
+										save()
+										i = 0
+									else:
+										i += 1
+									if state == 0:
+										GPIO.output(6, 1)
+										state = 1
+									else:
+										GPIO.output(6, 0)
+										state = 0
+							else:
+								break		
+				except IndexError:
+					pass
+				except KeyboardInterrupt:
+					stop(23)
+				except (KeyError,AttributeError,TypeError, ValueError)as e:
+					pass
+
 					if GPIO.input(23) == 0:
 						stop(channel=None)
+				except OSError as e:
+					print(e)
+					from time import sleep
+					from os import system
+					print("Service not running... starting it")
+					system("sudo killall gpsd")
+					system("sudo gpsd /dev/ttyS0 -F /var/run/gpsd.sock")
+					sleep(10)
 			else:
 				GPIO.output(13, 0)
 		except KeyboardInterrupt:

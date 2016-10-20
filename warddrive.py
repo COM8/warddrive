@@ -53,7 +53,7 @@ def main():
     try:
         with open("logFile" + '.pkl', 'rb') as f:
             loggedData = pickle.load(f)
-    except FileNotFoundError:
+    except (FileNotFoundError,EOFError):
         loggedData = dict()
     setupGPIO()
 	

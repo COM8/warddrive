@@ -3,7 +3,11 @@ import sys
 if __name__=="__main__":
 	try:
 		with open("logFile" + '.pkl', 'rb') as f:
-			loggedData = pickle.load(f)
+			try:
+				loggedData = pickle.load(f)
+			except EOFError:
+				print("no loggedData found")
+				exit(-1)
 		if len(sys.argv)>=2:
 			Thelist=sys.argv
 			Thelist.pop(0)

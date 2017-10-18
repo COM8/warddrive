@@ -1,2 +1,2 @@
 # Warddrive
-This project searches for open WLAN networks and expots them toGoogle maps.
+This project searches for open WLAN networks and expots them to Google earth.

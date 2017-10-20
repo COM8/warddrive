@@ -11,7 +11,6 @@ from time import sleep
 def stop(channel):
 	save()
 	GPIO.cleanup()
-	# exit(0)
 	while GPIO.input == 0:
 		sleep(0.5)
 	while GPIO.input == 1:
